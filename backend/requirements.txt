@@ -1,10 +1,18 @@
 fastapi==0.104.1
 uvicorn==0.24.0
 python-multipart==0.0.6
-pydub==0.25.1
+pydub==0.25.1  # Requires ffmpeg
 whisper==1.1.10
 sentence-transformers==2.2.2
 faiss-cpu==1.7.4
 SQLAlchemy==2.0.23
 python-dotenv==1.0.0
-pydantic-settings==2.0.3 
+pydantic-settings==2.0.3
+pytest==7.4.3
+httpx==0.25.1
+
+# System requirements:
+# ffmpeg - Install via:
+# macOS: brew install ffmpeg
+# Ubuntu: apt-get install ffmpeg
+# Windows: choco install ffmpeg 
