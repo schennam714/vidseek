@@ -38,7 +38,7 @@ class MediaProcessor:
             audio_path = os.path.join(settings.UPLOAD_FOLDER, f"{filename}.wav")
             
             # Extract audio based on input format
-            if file_path.endswith('.mp4') or file_path.endswith('.avi') or file_path.endswith('.mkv'):
+            if file_path.endswith('.mp4') or file_path.endswith('.avi') or file_path.endswith('.mkv') or file_path.endswith('.m4a'):
                 video = AudioSegment.from_file(file_path)
                 audio = video.set_channels(1)  # Convert to mono
                 audio.export(audio_path, format="wav")

@@ -2,7 +2,7 @@ fastapi==0.104.1
 uvicorn==0.24.0
 python-multipart==0.0.6
 pydub==0.25.1  # Requires ffmpeg
-whisper==1.1.10
+openai-whisper==20231117
 sentence-transformers==2.2.2
 faiss-cpu==1.7.4
 SQLAlchemy==2.0.23
@@ -10,6 +10,7 @@ python-dotenv==1.0.0
 pydantic-settings==2.0.3
 pytest==7.4.3
 httpx==0.25.1
+numpy<2.0.0  # Pin numpy to 1.x version
 
 # System requirements:
 # ffmpeg - Install via:
