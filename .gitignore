@@ -19,3 +19,6 @@ build/
 .env.local 
 
 project_structure.txt
+
+.pytest_cache/
+.DS_Store
