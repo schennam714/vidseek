@@ -8,23 +8,54 @@ def chunking_service():
 @pytest.fixture
 def sample_transcript_segments():
     return [
-        ("Introduction", 0.0, 3.0),
-        ("Data Science is an interdisciplinary field that uses scientific methods, processes, algorithms, and systems to extract knowledge and insights from structured and unstructured data.", 3.0, 15.5),
-        ("It draws from statistics, computer science, machine learning, and various data analysis techniques to discover patterns, make predictions, and derive actionable insights.", 15.5, 28.0),
-        ("Data Science can be applied across many industries, including healthcare, finance, marketing, and education, where it helps organizations make data-driven decisions, optimize processes, and understand customer behaviors.", 28.0, 43.0),
-        ("Overview of Big Data", 43.0, 46.0),
-        ("Big data refers to large, diverse sets of information that grow at ever-increasing rates.", 46.0, 54.0),
-        ("It encompasses the volume of information, the velocity or speed at which it is created and collected, and the variety or scope of the data points being covered.", 54.0, 66.0),
-        ("Data Science Methods", 66.0, 69.0),
-        ("There are several important methods used in Data Science:", 69.0, 74.0),
-        ("1. Regression Analysis 2. Classification 3. Clustering 4. Neural Networks", 74.0, 82.0),
-        ("Challenges in Data Science", 82.0, 85.0),
-        ("Data Quality: Poor data quality can lead to incorrect conclusions.", 85.0, 91.0),
-        ("Data Privacy: Ensuring the privacy of sensitive information.", 91.0, 96.0),
-        ("Scalability: Handling massive datasets efficiently.", 96.0, 101.0),
-        ("Conclusion", 101.0, 103.0),
-        ("Data Science continues to be a driving force in many industries, offering insights that can lead to better decisions and optimized outcomes.", 103.0, 114.0),
-        ("It remains an evolving field that incorporates the latest technological advancements.", 114.0, 122.0)
+        ("Welcome to Our Grand Tour of Human Knowledge", 0.0, 15.5),
+        ("The Renaissance period in Italy marked a dramatic cultural shift in European history, particularly in art and architecture.", 15.5, 45.2),
+        ("Michelangelo's work on the Sistine Chapel ceiling took four years to complete, revolutionizing fresco painting techniques.", 45.2, 85.8),
+        ("Meanwhile, in East Asia, the Ming Dynasty was experiencing its golden age of economic prosperity and cultural achievements.", 85.8, 125.3),
+        ("The porcelain production techniques developed during this period remained unmatched for centuries.", 125.3, 165.7),
+        ("Let's transition to modern physics", 165.7, 180.1),
+        ("Quantum mechanics fundamentally changed our understanding of the microscopic world, introducing concepts like wave-particle duality.", 180.1, 228.4),
+        ("The double-slit experiment demonstrated the strange behavior of particles at the quantum level.", 228.4, 268.9),
+        ("String theory suggests the universe might have up to 11 dimensions, challenging our basic conception of reality.", 268.9, 315.6),
+        ("Moving to environmental science", 315.6, 330.2),
+        ("Coral reefs, often called the rainforests of the sea, are experiencing unprecedented levels of bleaching due to rising ocean temperatures.", 330.2, 380.7),
+        ("Scientists estimate that over 50% of the Great Barrier Reef has been affected since 2016.", 380.7, 425.2),
+        ("The interconnected nature of marine ecosystems means this damage has far-reaching consequences for global biodiversity.", 425.2, 475.8),
+        ("Let's discuss culinary traditions", 475.8, 490.6),
+        ("Traditional fermentation techniques have been used across cultures for thousands of years to preserve food.", 490.6, 538.3),
+        ("From Korean kimchi to German sauerkraut, these methods not only extend shelf life but also create unique flavors and provide health benefits.", 538.3, 588.9),
+        ("The biochemistry behind fermentation involves complex interactions between microorganisms and their environment.", 588.9, 635.4),
+        ("Switching to space exploration", 635.4, 650.1),
+        ("The James Webb Space Telescope has revolutionized our view of distant galaxies.", 650.1, 695.4),
+        ("Its infrared capabilities allow us to observe celestial objects previously hidden from our view.", 695.4, 740.8),
+        ("Recent observations have revealed potential signatures of water vapor in exoplanet atmospheres.", 740.8, 788.3),
+        ("Let's explore ancient civilizations", 788.3, 803.5),
+        ("The discovery of Göbekli Tepe in Turkey has challenged our understanding of prehistoric human societies.", 803.5, 855.2),
+        ("This complex of circular structures predates agriculture, suggesting sophisticated organization before farming.", 855.2, 908.9),
+        ("Moving to modern technology", 908.9, 923.5),
+        ("Artificial Intelligence has made remarkable progress in natural language processing.", 923.5, 970.8),
+        ("Large language models can now engage in sophisticated dialogue and assist in complex tasks.", 970.8, 1018.4),
+        ("However, these systems still face challenges with contextual understanding and ethical decision-making.", 1018.4, 1065.9),
+        ("Exploring neuroscience", 1065.9, 1080.2),
+        ("Recent advances in brain-computer interfaces promise new hope for treating neurological conditions.", 1080.2, 1128.7),
+        ("Scientists have successfully demonstrated direct neural control of prosthetic limbs.", 1128.7, 1175.3),
+        ("The future of medicine", 1175.3, 1190.1),
+        ("CRISPR gene editing technology is opening new frontiers in treating genetic diseases.", 1190.1, 1238.6),
+        ("Clinical trials are showing promising results in conditions previously considered untreatable.", 1238.6, 1285.2),
+        ("Understanding climate change", 1285.2, 1300.5),
+        ("Global temperature records show an unprecedented rate of warming over the past century.", 1300.5, 1348.8),
+        ("The Arctic is warming at nearly twice the global average rate.", 1348.8, 1395.4),
+        ("Permafrost thaw could release significant amounts of stored carbon into the atmosphere.", 1395.4, 1442.9),
+        ("The economics of renewable energy", 1442.9, 1458.3),
+        ("Solar and wind power have become increasingly cost-competitive with fossil fuels.", 1458.3, 1505.7),
+        ("Battery technology improvements are making renewable energy storage more viable.", 1505.7, 1552.4),
+        ("The role of artificial intelligence in energy grid management", 1552.4, 1599.8),
+        ("Mathematical discoveries", 1599.8, 1614.2),
+        ("The Riemann Hypothesis remains one of mathematics' greatest unsolved problems.", 1614.2, 1661.5),
+        ("Recent advances in prime number theory have opened new avenues in cryptography.", 1661.5, 1708.9),
+        ("In conclusion", 1708.9, 1723.6),
+        ("The interconnectedness of human knowledge spans across time, space, and disciplines.", 1723.6, 1760.5),
+        ("Our journey through these diverse topics shows how each field contributes to our understanding of the world.", 1760.5, 1800.0)
     ]
 
 
@@ -35,7 +66,7 @@ def test_semantic_chunking(chunking_service, sample_transcript_segments):
     for i, chunk in enumerate(chunks):
         print(f"\nChunk {i}:")
         for text, start, end in chunk:
-            print(f"  {start:.1f} -> {end:.1f}: {text}")
+            print(f"  {start:.1f} -> {end:.1f}")
     
     # Verify basic chunking
     assert len(chunks) > 0
@@ -43,74 +74,28 @@ def test_semantic_chunking(chunking_service, sample_transcript_segments):
     # Verify timestamp continuity within chunks
     for chunk in chunks:
         for i in range(len(chunk) - 1):
-            # End time of current segment should match start time of next
             assert chunk[i][2] == chunk[i + 1][1]
     
     # Verify content
     first_chunk = chunks[0]
-    assert first_chunk[0][1] == sample_transcript_segments[0][1]  # Check timestamp preservation
+    assert first_chunk[0][1] == sample_transcript_segments[0][1]  
 
-# def test_sliding_window(chunking_service):
-#     segment_chunk = [
-#         ("First segment", 0.0, 4.0),
-#         ("Second segment", 4.0, 8.0),
-#         ("Third segment", 8.0, 12.0)
-#     ]
-    
-#     chunks = chunking_service._apply_sliding_window(segment_chunk)
-    
-#     # With target_size=10 and overlap=2, should create overlapping chunks
-#     assert len(chunks) >= 2
-#     assert chunks[0].start_time == 0.0
-#     assert chunks[-1].end_time == 12.0
-    
-#     # Check overlap
-#     for i in range(len(chunks) - 1):
-#         assert chunks[i].end_time > chunks[i + 1].start_time
 
-# def test_empty_input(chunking_service):
-#     chunks = chunking_service.create_chunks([])
-#     assert chunks == []
-
-# def test_single_segment(chunking_service):
-#     segments = [("This is a test.", 0.0, 3.0)]
-#     chunks = chunking_service.create_chunks(segments)
-#     assert len(chunks) == 1
-#     assert chunks[0].text == "This is a test."
-#     assert chunks[0].start_time == 0.0
-#     assert chunks[0].end_time == 3.0
-#     assert chunks[0].segment_ids == [0]
-
-# def test_time_based_chunking(chunking_service):
-#     # Test that chunks respect time boundaries
-#     segments = [
-#         ("Part one.", 0.0, 5.0),
-#         ("Part two.", 5.0, 10.0),
-#         ("Part three.", 10.0, 15.0)
-#     ]
+def test_end_to_end_chunking(chunking_service, sample_transcript_segments):
+    chunks = chunking_service.create_chunks(sample_transcript_segments)
     
-#     chunks = chunking_service.create_chunks(segments)
+    # Print chunks for debugging
+    for i, chunk in enumerate(chunks):
+        print(f"\nChunk {i}:")
+        print(f"  {chunk.start_time:.1f} -> {chunk.end_time:.1f}")
+        print(f"  Segment IDs: {chunk.segment_ids}")
+        print(f"  Text: {chunk.text}")  # First 100 chars
     
-#     # With target_size=10, should split into 2 chunks with overlap
-#     assert len(chunks) == 2
-#     # First chunk should be ~10 seconds
-#     assert chunks[0].end_time - chunks[0].start_time <= 10
-#     # Should have overlap
-#     assert chunks[0].end_time > chunks[1].start_time
-
-# def test_segment_ids_continuity(chunking_service):
-#     segments = [
-#         ("One.", 0.0, 3.0),
-#         ("Two.", 3.0, 6.0),
-#         ("Three.", 6.0, 9.0),
-#         ("Four.", 9.0, 12.0)
-#     ]
+    # # Basic validation
+    assert len(chunks) > 0
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
     
-#     chunks = chunking_service.create_chunks(segments)
-    
-#     # Check that segment IDs are continuous and valid
-#     for chunk in chunks:
-#         # IDs should be sequential
-#         assert chunk.segment_ids == list(range(min(chunk.segment_ids), max(chunk.segment_ids) + 1))
-#         # IDs should be within valid range
-#         assert all(0 <= id < len(segments) for id in chunk.segment_ids) 
+    # # Verify timestamps are continuous
+    for i in range(len(chunks) - 1):
+        print(f"Chunk {i} end time: {chunks[i].end_time}, next chunk start time: {chunks[i + 1].start_time}")
+        assert chunks[i].end_time <= chunks[i + 1].start_time 
