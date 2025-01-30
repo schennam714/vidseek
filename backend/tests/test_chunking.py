@@ -1,9 +1,10 @@
 import pytest
+import time
 from app.services.chunking import ChunkingService, Chunk
 
 @pytest.fixture(scope="session")
 def chunking_service():
-    return ChunkingService(target_chunk_size=200, overlap_size=2)  # Smaller sizes for testing
+    return ChunkingService(target_chunk_size=200, overlap_size=2)
 
 @pytest.fixture
 def sample_transcript_segments():
@@ -60,7 +61,7 @@ def sample_transcript_segments():
 
 
 def test_semantic_chunking(chunking_service, sample_transcript_segments):
-    chunks = chunking_service._create_semantic_chunks(sample_transcript_segments)
+    chunks = chunking_service._process_batch(sample_transcript_segments, 0)
     
     # Print chunks for debugging
     for i, chunk in enumerate(chunks):
@@ -81,15 +82,20 @@ def test_semantic_chunking(chunking_service, sample_transcript_segments):
     assert first_chunk[0][1] == sample_transcript_segments[0][1]  
 
 
+def print_chunk_details(chunks, test_name=""):
+    print(f"\n{'='*20} {test_name} {'='*20}")
+    for i, chunk in enumerate(chunks):
+        print(f"\nChunk {i+1}:")
+        print(f"Time: {chunk.start_time:.1f}s -> {chunk.end_time:.1f}s")
+        print(f"Duration: {chunk.end_time - chunk.start_time:.1f}s")
+        print(f"Segment IDs: {chunk.segment_ids}")
+        print("Text:")
+        print(f"    {chunk.text}")
+        print("-" * 80)
+
 def test_end_to_end_chunking(chunking_service, sample_transcript_segments):
     chunks = chunking_service.create_chunks(sample_transcript_segments)
-    
-    # Print chunks for debugging
-    for i, chunk in enumerate(chunks):
-        print(f"\nChunk {i}:")
-        print(f"  {chunk.start_time:.1f} -> {chunk.end_time:.1f}")
-        print(f"  Segment IDs: {chunk.segment_ids}")
-        print(f"  Text: {chunk.text}")  # First 100 chars
+    print_chunk_details(chunks, "End-to-End Chunking Results")
     
     # # Basic validation
     assert len(chunks) > 0
@@ -99,3 +105,51 @@ def test_end_to_end_chunking(chunking_service, sample_transcript_segments):
     for i in range(len(chunks) - 1):
         print(f"Chunk {i} end time: {chunks[i].end_time}, next chunk start time: {chunks[i + 1].start_time}")
         assert chunks[i].end_time <= chunks[i + 1].start_time 
+
+def test_batch_processing(chunking_service):
+    # Create a large number of segments to test batching
+    large_segments = []
+    for i in range(100):  # 100 segments
+        large_segments.append((
+            f"This is test segment {i}",
+            float(i * 10),
+            float((i + 1) * 10)
+        ))
+    
+    chunks = chunking_service.create_chunks(large_segments)
+    
+    # Verify chunks are properly created
+    assert len(chunks) > 0
+    # Verify chronological order
+    for i in range(len(chunks) - 1):
+        assert chunks[i].end_time <= chunks[i + 1].start_time
+
+def test_parallel_processing(chunking_service, sample_transcript_segments):
+    # Test with multiple batches
+    start_time = time.time()
+    chunks = chunking_service.create_chunks(sample_transcript_segments * 4)  # Multiply data
+    end_time = time.time()
+    
+    print(f"\nProcessing time for {len(sample_transcript_segments * 4)} segments: {end_time - start_time:.2f}s")
+    
+    assert len(chunks) > 0
+
+# Benchmarking tests
+def test_performance(chunking_service, benchmark):
+    # Create test data
+    test_segments = []
+    for i in range(200):  # Simulate 20 minutes of content
+        test_segments.append((
+            f"This is segment {i} with some additional text to make it more realistic and test the processing capabilities.",
+            float(i * 6),
+            float((i + 1) * 6)
+        ))
+    
+    # Benchmark the chunking process
+    def run_chunking():
+        return chunking_service.create_chunks(test_segments)
+    
+    # Run benchmark and print results
+    chunks = benchmark(run_chunking)
+    print(f"\nProcessed {len(test_segments)} segments into {len(chunks)} chunks")
+    print(f"Average chunk size: {sum(len(chunk.text) for chunk in chunks) / len(chunks):.0f} characters") 

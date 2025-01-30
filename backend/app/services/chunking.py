@@ -1,6 +1,7 @@
 from typing import List, Tuple
 from dataclasses import dataclass
 import spacy
+from concurrent.futures import ThreadPoolExecutor
 
 @dataclass
 class Chunk:
@@ -19,41 +20,50 @@ class ChunkingService:
         if not segments:
             return []
         
-        # Get semantic chunks (each chunk is a list of (text, start, end) tuples)
-        semantic_chunks = self._create_semantic_chunks(segments)
+        # Process in parallel batches
+        BATCH_SIZE = 50
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = []
+            for i in range(0, len(segments), BATCH_SIZE):
+                batch = segments[i:min(i + BATCH_SIZE, len(segments))]
+                futures.append(executor.submit(self._process_batch, batch, i))
+            
+            all_chunks = []
+            for future in futures:
+                batch_chunks = future.result()
+                if batch_chunks:  # Only extend if we got results
+                    all_chunks.extend(batch_chunks)
         
-        # Convert semantic chunks to Chunk objects
-        final_chunks = []
-        for i, segment_group in enumerate(semantic_chunks):
-            final_chunks.append(Chunk(
-                text=" ".join(seg[0] for seg in segment_group),
-                start_time=segment_group[0][1],  # First segment's start time
-                end_time=segment_group[-1][2],   # Last segment's end time
-                # Find the indices of these segments in the original list
-                segment_ids=[segments.index(seg) for seg in segment_group]
-            ))
-        
-        return final_chunks
+        # Convert to final Chunk objects
+        return [
+            Chunk(
+                text=" ".join(seg[0] for seg in chunk),
+                start_time=chunk[0][1],
+                end_time=chunk[-1][2],
+                segment_ids=[segments.index(seg) for seg in chunk]
+            )
+            for chunk in all_chunks
+        ]
     
-    def _create_semantic_chunks(self, segments: List[Tuple[str, float, float]]) -> List[List[Tuple]]:
-        # Step 1: Create full text while keeping track of segment boundaries
+    def _process_batch(self, segments: List[Tuple[str, float, float]], offset: int) -> List[List[Tuple]]:
+        # Create full text for spaCy
         full_text = ""
         char_to_segment_map = {}
         current_char_pos = 0
         
-        for i, (text, start, end) in enumerate(segments):
+        for i, (text, _, _) in enumerate(segments):
             for _ in range(len(text) + 1):
                 char_to_segment_map[current_char_pos] = i
                 current_char_pos += 1
             full_text += text + " "
         
-        # Step 2: Process with spaCy
+        # Process with spaCy
         doc = self.nlp(full_text)
         
-        # Step 3: Create chunks based on sentences
+        # Create chunks
         chunks = []
         current_chunk = []
-        used_segments = set()  # Track which segments we've used
+        used_segments = set()
         
         for sent in doc.sents:
             start_char = sent.start_char
@@ -64,7 +74,7 @@ class ChunkingService:
             # Get segments for this sentence
             sentence_segments = []
             for i in range(start_segment, end_segment + 1):
-                if i not in used_segments:  # Only use segments we haven't used yet
+                if i not in used_segments:
                     sentence_segments.append(segments[i])
                     used_segments.add(i)
             
@@ -76,7 +86,6 @@ class ChunkingService:
                 if current_chunk[-1][2] == sentence_segments[0][1]:
                     current_chunk.extend(sentence_segments)
                 else:
-                    # Start new chunk
                     chunks.append(current_chunk)
                     current_chunk = sentence_segments
             else:
@@ -89,8 +98,5 @@ class ChunkingService:
         
         if current_chunk:
             chunks.append(current_chunk)
-        
-        # Sort chunks by start time to ensure chronological order
-        chunks.sort(key=lambda chunk: chunk[0][1])
         
         return chunks
