@@ -15,7 +15,10 @@ class Settings(BaseSettings):
     UPLOAD_FOLDER: str = "uploads"
     DATABASE_URL: str = "sqlite:///./multimedia_query.db"
     
+    # Chunking settings
     CHUNK_SIZE_SECONDS: int = 30
+    CHUNK_TARGET_SIZE: int = 200  # Target size in characters
+    CHUNK_OVERLAP_SIZE: int = 5   # Number of overlapping sentences
     
     class Config:
         case_sensitive = True
