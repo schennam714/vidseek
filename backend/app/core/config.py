@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: list = ["http://localhost:3000"]
     
     UPLOAD_FOLDER: str = "uploads"
-    DATABASE_URL: str = "sqlite:///./multimedia_query.db"
+    DATABASE_URL: str = "sqlite:///multimedia_query.db"
     
     # Chunking settings
     CHUNK_SIZE_SECONDS: int = 30
