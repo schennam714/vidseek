@@ -14,7 +14,11 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(upload.router, prefix=settings.API_V1_STR + "/media")
+app.include_router(
+    upload.router,
+    prefix=settings.API_V1_STR + "/media",
+    tags=["media"]
+)
 
 @app.get("/")
 async def root():

@@ -38,7 +38,7 @@ class MediaProcessor:
             audio_path = os.path.join(settings.UPLOAD_FOLDER, f"{filename}.wav")
             
             # Extract audio based on input format
-            if file_path.endswith('.mp4') or file_path.endswith('.avi') or file_path.endswith('.mkv') or file_path.endswith('.m4a'):
+            if file_path.endswith('.mp4') or file_path.endswith('.avi') or file_path.endswith('.mkv'):
                 video = AudioSegment.from_file(file_path)
                 audio = video.set_channels(1)  # Convert to mono
                 audio.export(audio_path, format="wav")
@@ -56,4 +56,17 @@ class MediaProcessor:
                     
             return audio_path
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error extracting audio: {str(e)}") 
+            raise HTTPException(status_code=500, detail=f"Error extracting audio: {str(e)}")
+
+    @staticmethod
+    def delete_files(*file_paths: str) -> None:
+        """Delete physical files from the filesystem."""
+        for file_path in file_paths:
+            if file_path and os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except Exception as e:
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Error deleting file {file_path}: {str(e)}"
+                    ) 
