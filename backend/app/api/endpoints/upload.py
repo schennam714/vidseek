@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from ...services.media_processor import MediaProcessor
 from ...services.transcription import TranscriptionService
 from ...services.chunking import ChunkingService
+from ...services.embedding import embedding_service
+from ...services.opensearch_service import opensearch_service
 from ...crud import crud_media
 from ...schemas.media import MediaCreate, MediaInDB
 from ...db.session import get_db
@@ -18,7 +20,7 @@ async def upload_media(
     db: Session = Depends(get_db)
 ):
     """
-    Upload a media file, process it, and store results in database.
+    Upload a media file, process it, and store results in database and OpenSearch.
     """
     try:
         # Save and process file
@@ -31,6 +33,10 @@ async def upload_media(
         # Create chunks
         chunks = chunking_service.create_chunks(segments)
         
+        # Generate embeddings for chunks
+        chunk_texts = [chunk.text for chunk in chunks]
+        chunk_embeddings = embedding_service.generate_embeddings_batch(chunk_texts)
+        
         # Prepare media data
         media_create = MediaCreate(
             filename=file.filename,
@@ -38,7 +44,7 @@ async def upload_media(
             audio_path=audio_path
         )
         
-        # Save to database with transcription and chunks
+        # Save to database
         db_media = crud_media.create_with_transcription(
             db=db,
             media=media_create,
@@ -50,9 +56,26 @@ async def upload_media(
             } for chunk in chunks]
         )
         
+        # Index chunks in OpenSearch
+        for chunk, embedding in zip(chunks, chunk_embeddings):
+            opensearch_service.index_chunk(
+                chunk_id=chunk.segment_ids[0],  # Using first segment ID as chunk ID
+                media_id=db_media.id,
+                text=chunk.text,
+                start_time=chunk.start_time,
+                end_time=chunk.end_time,
+                vector=embedding
+            )
+        
         return db_media
         
     except Exception as e:
+        # Clean up any indexed chunks if database operation failed
+        if 'db_media' in locals():
+            try:
+                opensearch_service.delete_by_media_id(db_media.id)
+            except:
+                pass  # Ignore cleanup errors
         raise HTTPException(
             status_code=500,
             detail=f"Error processing media: {str(e)}"

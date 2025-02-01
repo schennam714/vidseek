@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints import upload
+from app.api.endpoints import upload, query
 from app.core.config import settings
 
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -18,6 +18,12 @@ app.include_router(
     upload.router,
     prefix=settings.API_V1_STR + "/media",
     tags=["media"]
+)
+
+app.include_router(
+    query.router,
+    prefix=settings.API_V1_STR + "/query",
+    tags=["query"]
 )
 
 @app.get("/")
