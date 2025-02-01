@@ -84,19 +84,12 @@ class OpenSearchService:
         )
         return response
     
-    def search_similar(
-        self, 
-        query_vector: np.ndarray,
-        query_text: str,
-        k: int = 1,
-        min_score: float = 0.7
-    ) -> List[Dict[str, Any]]:
-        """
-        Search for similar chunks using k-NN search
-        """
+    def search_similar(self, query_vector, query_text, k=3, min_score=0.6):
+        """Search for similar chunks using cosine similarity"""
         # Normalize query vector
         query_vector = query_vector / np.linalg.norm(query_vector)
         
+        # Use kNN query instead of script_score
         query = {
             "size": k,
             "query": {
@@ -106,7 +99,8 @@ class OpenSearchService:
                         "k": k
                     }
                 }
-            }
+            },
+            "_source": ["text", "media_id", "start_time", "end_time"]
         }
         
         response = self.client.search(
@@ -114,21 +108,17 @@ class OpenSearchService:
             body=query
         )
         
-        results = []
-        for hit in response['hits']['hits']:
-            # For k-NN with normalized vectors, score is cosine similarity
-            # Already in -1 to 1 range, convert to 0 to 1
-            score = (float(hit['_score']) + 1) / 2
-            
-            if score >= min_score:
-                result = hit['_source']
-                result['score'] = score
-                results.append(result)
-        
-        # Sort by score in descending order
-        results.sort(key=lambda x: x['score'], reverse=True)
-        
-        return results
+        hits = response['hits']['hits']
+        return [
+            {
+                'text': hit['_source']['text'],
+                'media_id': hit['_source']['media_id'],
+                'start_time': hit['_source']['start_time'],
+                'end_time': hit['_source']['end_time'],
+                'score': (float(hit['_score']) + 1) / 2  # Convert to 0-1 range
+            }
+            for hit in hits
+        ]
     
     def delete_by_media_id(self, media_id: int):
         """Delete all chunks for a specific media"""

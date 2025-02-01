@@ -58,13 +58,14 @@ async def upload_media(
         
         # Index chunks in OpenSearch
         for chunk, embedding in zip(chunks, chunk_embeddings):
+            vector = embedding_service.generate_embedding(chunk.text)
             opensearch_service.index_chunk(
-                chunk_id=chunk.segment_ids[0],  # Using first segment ID as chunk ID
+                chunk_id=chunk.segment_ids[0],
                 media_id=db_media.id,
                 text=chunk.text,
                 start_time=chunk.start_time,
                 end_time=chunk.end_time,
-                vector=embedding
+                vector=vector
             )
         
         return db_media
