@@ -12,7 +12,7 @@ class Chunk:
     segment_ids: List[int]
 
 class ChunkingService:
-    def __init__(self, chunk_size: int = 1600, overlap_size: int = 337):
+    def __init__(self, chunk_size: int = 1000, overlap_size: int = 200):
         """Initialize the chunking service with configurable chunk and overlap sizes"""
         self.chunk_size = chunk_size
         self.overlap_size = overlap_size
