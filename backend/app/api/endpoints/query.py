@@ -17,7 +17,7 @@ class SearchResult(BaseModel):
         from_attributes = True
 
 @router.post("/search")
-async def search_media(query: str, min_score: float = 0.6, k: int = 3):
+async def search_media(query: str, min_score: float = 0.6, k: int = 5):
     try:
         # Generate embedding for query
         query_vector = embedding_service.generate_embedding(query)

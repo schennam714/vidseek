@@ -22,7 +22,7 @@ def upload_video(file_path):
         response = requests.post(f"{BASE_URL}/media/upload", files=files)
     return response.json()
 
-def search_content(query, k=3, min_score=0.6):
+def search_content(query, k=10, min_score=0.6):
     """Search for content and return results"""
     response = requests.post(
         f"{BASE_URL}/query/search",
@@ -54,7 +54,7 @@ def run_test():
         # Upload test video
         print("\nUploading video...")
         test_media_id = None
-        upload_result = upload_video("uploads/videoplayback.mp4")
+        upload_result = upload_video("uploads/crashcourse.mp4")
         print(f"Upload result: {upload_result}")
         
         if 'detail' in upload_result:
@@ -66,8 +66,8 @@ def run_test():
         time.sleep(2)
         
         # Test search
-        print("\nSearching for: 'what theatrical techniques are discussed'")
-        results = search_content("what theatrical techniques are discussed")
+        print("\nSearching for: 'what is the link between consumption and genius'")
+        results = search_content("what is the link between consumption and genius")
         print("\nRaw results:", results)
         
         print("\nResults:")

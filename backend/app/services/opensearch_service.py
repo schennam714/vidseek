@@ -84,7 +84,7 @@ class OpenSearchService:
         )
         return response
     
-    def search_similar(self, query_vector, query_text, k=3, min_score=0.6):
+    def search_similar(self, query_vector, query_text, k=5, min_score=0.6):
         """Search for similar chunks using cosine similarity"""
         # Normalize query vector
         query_vector = query_vector / np.linalg.norm(query_vector)

@@ -1,7 +1,8 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from dataclasses import dataclass
 import spacy
 from concurrent.futures import ThreadPoolExecutor
+from langchain.text_splitter import MarkdownTextSplitter
 
 @dataclass
 class Chunk:
@@ -11,12 +12,17 @@ class Chunk:
     segment_ids: List[int]
 
 class ChunkingService:
-    def __init__(self, target_chunk_size: int = 200, overlap_size: int = 5):
-        self.nlp = spacy.load("en_core_web_sm")
-        self.target_chunk_size = target_chunk_size
+    def __init__(self, chunk_size: int = 1600, overlap_size: int = 337):
+        """Initialize the chunking service with configurable chunk and overlap sizes"""
+        self.chunk_size = chunk_size
         self.overlap_size = overlap_size
+        self.text_splitter = MarkdownTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=overlap_size
+        )
     
     def create_chunks(self, segments: List[Tuple[str, float, float]]) -> List[Chunk]:
+        """Create overlapping chunks while preserving timing information"""
         if not segments:
             return []
         
@@ -31,72 +37,58 @@ class ChunkingService:
             all_chunks = []
             for future in futures:
                 batch_chunks = future.result()
-                if batch_chunks:  # Only extend if we got results
+                if batch_chunks:
                     all_chunks.extend(batch_chunks)
         
-        # Convert to final Chunk objects
-        return [
-            Chunk(
-                text=" ".join(seg[0] for seg in chunk),
-                start_time=chunk[0][1],
-                end_time=chunk[-1][2],
-                segment_ids=[segments.index(seg) for seg in chunk]
-            )
-            for chunk in all_chunks
-        ]
-    
-    def _process_batch(self, segments: List[Tuple[str, float, float]], offset: int) -> List[List[Tuple]]:
-        # Create full text for spaCy
-        full_text = ""
-        char_to_segment_map = {}
-        current_char_pos = 0
+        return all_chunks
+
+    def _process_batch(self, segments: List[Tuple[str, float, float]], offset: int) -> List[Chunk]:
+        """Process a batch of segments using LangChain's text splitter"""
+        # First, combine all segment texts while keeping track of their boundaries
+        combined_text = ""
+        segment_boundaries = []
+        current_pos = 0
         
-        for i, (text, _, _) in enumerate(segments):
-            for _ in range(len(text) + 1):
-                char_to_segment_map[current_char_pos] = i
-                current_char_pos += 1
-            full_text += text + " "
+        for i, segment in enumerate(segments):
+            text, start_time, end_time = segment  # Unpack tuple
+            segment_boundaries.append({
+                'start_pos': current_pos,
+                'end_pos': current_pos + len(text),
+                'segment_idx': offset + i,
+                'start_time': start_time,
+                'end_time': end_time
+            })
+            combined_text += text + " "  # Add space between segments
+            current_pos += len(text) + 1  # +1 for the space
         
-        # Process with spaCy
-        doc = self.nlp(full_text)
+        # Use LangChain to split the text
+        split_texts = self.text_splitter.split_text(combined_text)
         
-        # Create chunks
         chunks = []
-        current_chunk = []
-        used_segments = set()
-        
-        for sent in doc.sents:
-            start_char = sent.start_char
-            end_char = sent.end_char
-            start_segment = char_to_segment_map[start_char]
-            end_segment = char_to_segment_map[min(end_char, len(full_text) - 1)]
+        for text in split_texts:
+            # Find which segments this chunk overlaps with
+            chunk_start = combined_text.find(text)
+            chunk_end = chunk_start + len(text)
             
-            # Get segments for this sentence
-            sentence_segments = []
-            for i in range(start_segment, end_segment + 1):
-                if i not in used_segments:
-                    sentence_segments.append(segments[i])
-                    used_segments.add(i)
+            # Find overlapping segments
+            overlapping_segments = []
+            chunk_start_time = None
+            chunk_end_time = None
             
-            if not sentence_segments:
-                continue
+            for boundary in segment_boundaries:
+                if (chunk_start <= boundary['end_pos'] and 
+                    chunk_end >= boundary['start_pos']):
+                    overlapping_segments.append(boundary['segment_idx'])
+                    if chunk_start_time is None:
+                        chunk_start_time = boundary['start_time']
+                    chunk_end_time = boundary['end_time']
             
-            # Check if we can add to current chunk
-            if current_chunk:
-                if current_chunk[-1][2] == sentence_segments[0][1]:
-                    current_chunk.extend(sentence_segments)
-                else:
-                    chunks.append(current_chunk)
-                    current_chunk = sentence_segments
-            else:
-                current_chunk = sentence_segments
-            
-            # Check size limit
-            if len(" ".join(seg[0] for seg in current_chunk)) > self.target_chunk_size:
-                chunks.append(current_chunk)
-                current_chunk = []
-        
-        if current_chunk:
-            chunks.append(current_chunk)
+            if overlapping_segments:
+                chunks.append(Chunk(
+                    text=text.strip(),
+                    start_time=chunk_start_time,
+                    end_time=chunk_end_time,
+                    segment_ids=overlapping_segments
+                ))
         
         return chunks
